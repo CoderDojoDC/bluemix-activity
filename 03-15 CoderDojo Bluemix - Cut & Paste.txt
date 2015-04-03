@@ -1,0 +1,91 @@
+Sign up for Bluemix
+http://www.bluemix.net
+
+Sign up for JazzHub 
+http://hub.jazz.net
+
+JazzHub URL to clone project
+https://hub.jazz.net/project/floresam/coderdojodclab/overview
+
+===== app.js code =====
+/* The default web page - show the survey input form */
+app.get('/', function(req, res) {
+    res.sendfile('form.html');
+});
+
+/* This function will receive the vote form form and submit to survey display server */
+app.post('/vote/form', function(req, res) {
+    var post_data = querystring.stringify({
+        'from': req.body.from,
+        'Q1' : req.body.Q1,
+        'Q2' : req.body.Q2
+    });
+    var post_options = {
+        host: 'coderdojodcdisplayserver.mybluemix.net',
+        port: '80',
+        path: '/vote/form',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': Buffer.byteLength(post_data)
+        }
+    };
+    var post_req = http.request(post_options, function(response) {
+        var reply = '';
+        response.on('data', function(chunk) {
+            reply += chunk;
+        });
+        response.on('end', function() {
+            res.send('Response: ' + reply);
+        });
+    });
+    post_req.on('error', function(err) {
+        res.send('Error: ' + err);
+    });
+    post_req.write(post_data);
+    post_req.end();
+});
+
+===== form.html =====
+<body>
+    <h2>Submit the form below to send your response to the survey.</h2>	
+    <h3>Survey Questions</h3>
+    <ol>
+		<li>What is your favorite Bluemix runtime?</li>
+		<li>What is your favorite Bluemix database service?</li>
+	</ol>  
+
+   <form id='simulatorform' action='/vote/form' method='POST'>
+	    <table>
+			<tr>
+				<td><h4>Your Name</h4></td>
+				<td><input type="text" id='from' name='from'></td>
+			</tr>
+			<tr>
+				<td><h4>Answer 1</h4></td>
+                <td><select id='Q1' name='Q1'>
+                      <option default='' selected='selected' value=''>Select your response</option>
+                      <option value="1">1-Node.js</option>
+                      <option value="2">2-Java</option>
+                      <option value="3">3-Ruby(rails)</option>
+                      <option value="4">4-Ruby(sinatra)</option>
+                      <option value="5">5-Python</option>
+                    </select>
+				</td>
+			</tr>
+ 			<tr>
+                <td><h4>Answer 2</h4></td>
+                <td><select id='Q2' name='Q2'>
+                      <option default='' selected='selected' value=''>Select your response</option>
+                      <option value="1">1-DB2</option>
+                      <option value="2">2-MySQL</option>
+                      <option value="3">3-PostgreSQL</option>
+                      <option value="4">4-Cloudant</option>
+                      <option value="5">5-Mongo</option>
+                    </select>
+				</td>
+			</tr>
+		</table>
+        <button type='submit'>Submit survey response</button>
+    </form>
+</body>
